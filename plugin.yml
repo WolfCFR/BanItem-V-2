@@ -1,0 +1,42 @@
+name: BanItem
+main: com.abcalvin.BanItem.main
+version: 2.1
+commands:
+   banitem:
+      description: Version
+   banitem add:
+      description: Add ban item to ban item list
+   banitem remove:
+      description: Remove ban item from ban item list
+   banitem del:
+      description: Remove ban item from ban item list
+   banitem check:
+      description: Check if item is banned
+   banitem toggle conf:
+      description: toggles confiscation of items
+   banitem reload:
+      description: Reload banitem.
+permissions:
+    banitem.reload:
+      description: Reload banitem.
+    banitem.check:
+      description: Check if item is banned
+    banitem.add:
+        description: Blacklist an Item
+    banitem.del:
+        description: remove an item from blacklist
+    banitem.toggle:
+        description: toggle options in config.
+    banitem.bypass.<itemid>:<data>:
+        description: bypass banned items
+    banitem.int.<itemid>:<data>:
+        description: bypass interaction of ban item
+    banitem.break.<itemid>:<data>:
+        description: bypass block break of ban item
+    banitem.place.<itemid>:<data>:
+        description: bypass block place of ban item
+    banitem.pickup.<itemid>:<data>:
+        description: bypass pickup of ban item 
+    banitem.click.<itemid>:<data>:
+        description: bypass Click of banned item
+        
