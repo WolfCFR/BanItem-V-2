@@ -3,10 +3,10 @@ package com.abcalvin.BanItem;
 import java.util.ArrayList;
 
 public class itemcheck {
-	int number;
-	int Id;
-	byte Data;
-	String Reason;
+	private int number;
+	private int Id;
+	private byte Data;
+	private String Reason;
 	public static main plugin;
 
 	public itemcheck(main instance) {
@@ -38,5 +38,17 @@ public class itemcheck {
 			
 		}
 		
+	}
+	public int getId(){
+		return Id;
+	}
+	public int getData(){
+		return Data;
+	}
+	public String getReason(){
+		return Reason;
+	}
+	public int getnumber(){
+		return number;
 	}
 }

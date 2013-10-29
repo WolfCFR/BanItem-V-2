@@ -1,6 +1,6 @@
 name: BanItem
 main: com.abcalvin.BanItem.main
-version: 2.1
+version: 2.3
 commands:
    banitem:
       description: Version

@@ -23,23 +23,22 @@ public class BlockListener implements Listener {
 		int id = item.getType().getId();
 		byte data = item.getData();
 		if(plugin.worlds.contains(player.getWorld().getName())){
-		if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.break." + id + ":*")
-				 || player.hasPermission("banitem.break." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*") 
-				 || player.isOp() || player.hasPermission("banitem.*")) {
-			
-		}else{
-		itemcheck itemmethod = new itemcheck(plugin.all, id,data);
-		itemcheck itemmethod1 = new itemcheck(plugin.br, id,data);
-			if(itemmethod.number == 1 || itemmethod1.number == 1){
-				e.setCancelled(true);
-				player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Broken because:");
-				if(itemmethod.Reason != null){
-				player.sendMessage(plugin.banitem + itemmethod.Reason );
-				}else{
-				player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+			if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.break." + id + ":*")
+					|| player.hasPermission("banitem.break." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*") 
+					|| player.isOp() || player.hasPermission("banitem.*")) {
+			}else{
+				itemcheck itemmethod = new itemcheck(plugin.all, id,data);
+				itemcheck itemmethod1 = new itemcheck(plugin.br, id,data);
+				if(itemmethod.getnumber() == 1 || itemmethod1.getnumber() == 1){
+					e.setCancelled(true);
+					player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Broken because:");
+					if(itemmethod.getReason() != null){
+						player.sendMessage(plugin.banitem + itemmethod.getReason() );
+					}else{
+						player.sendMessage(plugin.banitem + itemmethod.getReason() );	
+					}
 				}
 			}
-		}
 		}
 	}
 	@EventHandler
@@ -49,22 +48,22 @@ public class BlockListener implements Listener {
 		int id = item.getType().getId();
 		byte data = item.getData().getData();
 		if(plugin.worlds.contains(player.getWorld().getName())){
-		if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.place." + id + ":*")
-				 || player.hasPermission("banitem.place." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*")
-				 || player.isOp() || player.hasPermission("banitem.*")) {
-		}else{
-		itemcheck itemmethod = new itemcheck(plugin.all, id, data);
-		itemcheck itemmethod1 = new itemcheck(plugin.place, id, data);
-		if(itemmethod.number == 1 || itemmethod1.number == 1){
-			e.setCancelled(true);
-			player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Placed because:");
-			if(itemmethod.Reason != null){
-			player.sendMessage(plugin.banitem + itemmethod.Reason );
+			if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.place." + id + ":*")
+					|| player.hasPermission("banitem.place." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*")
+					|| player.isOp() || player.hasPermission("banitem.*")) {
 			}else{
-			player.sendMessage(plugin.banitem + itemmethod1.Reason );	
-			}
+				itemcheck itemmethod = new itemcheck(plugin.all, id, data);
+				itemcheck itemmethod1 = new itemcheck(plugin.place, id, data);
+				if(itemmethod.getnumber() == 1 || itemmethod1.getnumber() == 1){
+					e.setCancelled(true);
+					player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Placed because:");
+					if(itemmethod.getReason() != null){
+						player.sendMessage(plugin.banitem + itemmethod.getReason() );
+					}else{
+						player.sendMessage(plugin.banitem + itemmethod.getReason() );	
+					}
+				}
 			}
 		}
-	}
 	}
 }

@@ -12,13 +12,18 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.abcalvin.BanItem.UpdateChecker.UpdateResult;
+import com.abcalvin.BanItem.UpdateChecker.UpdateType;
+
 public class main extends JavaPlugin{
 	public final Logger log = Logger.getLogger("Minecraft");
 	public final PlayerListener pl = new PlayerListener(this);
 	public final BlockListener bl = new BlockListener(this);
+	public final WorldScanner ws = new WorldScanner(this);
 	public ArrayList<String> all = new ArrayList<String>();
 	public ArrayList<String> place = new ArrayList<String>();
 	public ArrayList<String> pickup = new ArrayList<String>();
+	public ArrayList<String> world = new ArrayList<String>();
 	public ArrayList<String> interact = new ArrayList<String>();
 	public PluginDescriptionFile pdfFile = this.getDescription();
 	public ArrayList<String> click = new ArrayList<String>();
@@ -27,19 +32,14 @@ public class main extends JavaPlugin{
 	public final String banitem = ChatColor.RED + "[" + ChatColor.GRAY
 			+ "BanItem" + ChatColor.RED + "] " +ChatColor.AQUA;
 
-	protected UpdateChecker UpdateChecker;
-	
-
 	@Override
 	public void onEnable() {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		PluginManager pm = getServer().getPluginManager();
-		log.info(pdfFile.getName() + " is now Enabled!");
+		log.info("[BanItem] "+pdfFile.getName() + " is now Enabled!");
 		pm.registerEvents(this.pl, this);
 		pm.registerEvents(this.bl, this);
-        if (!new File(getDataFolder(), "config.yml").exists()) {
-            saveDefaultConfig();
-        }
+		pm.registerEvents(this.ws, this);
         if(this.getConfig().getStringList("Worlds").size() == 0){
         	worlds.add("world");
         	worlds.add("world_nether");
@@ -48,72 +48,42 @@ public class main extends JavaPlugin{
         	this.getConfig().set("Worlds", worlds);
         	this.saveConfig();
         }
+        if (!new File(getDataFolder(), "config.yml").exists()) {
+            saveDefaultConfig();
+            log.info("A new config.yml is generated for BanItem.");
+        }else{
+        	log.info("BanItem's config.yml detected");
+        }
 		all = (ArrayList<String>) this.getConfig().getStringList("Blacklist");
 		place = (ArrayList<String>) this.getConfig().getStringList("Blacklist Placement");
 		pickup = (ArrayList<String>) this.getConfig().getStringList("Blacklist Pickup");
 		interact = (ArrayList<String>) this.getConfig().getStringList("Blacklist Interaction");
 		click = (ArrayList<String>) this.getConfig().getStringList("Blacklist Click");
+		world = (ArrayList<String>) this.getConfig().getStringList("Blacklist World");
 		br = (ArrayList<String>) this.getConfig().getStringList("Blacklist Break");
-		if(all.isEmpty()){
-			this.reloadConfig();
-			this.getConfig().set("Blacklist", all);
-        	this.saveConfig();
-		}
-		if(place.isEmpty()){ 
-			this.reloadConfig();
-			this.getConfig().set("Blacklist Placement", place);
-        	this.saveConfig();
-		}
-		if(pickup.isEmpty()){
-			this.reloadConfig();
-			this.getConfig().set("Blacklist Pickup", pickup);
-        	this.saveConfig();
-		}
-		if(interact.isEmpty()){
-			this.reloadConfig();
-			this.getConfig().set("Blacklist Interaction", interact);
-        	this.saveConfig();
-		}
-		if(click.isEmpty()){
-			this.reloadConfig();
-			this.getConfig().set("Blacklist Click", click);
-        	this.saveConfig();
-			
-		}
-		if(br.isEmpty()){ 
-			this.reloadConfig();
-			this.getConfig().set("Blacklist Break", br);
-			this.saveConfig();
-			
-		}
 		worlds = (ArrayList<String>) this.getConfig().getStringList("Worlds");
-		this.UpdateChecker = new UpdateChecker(this, "http://dev.bukkit.org/bukkit-plugins/banitem/files.rss");
+		if(this.getConfig().getBoolean("UpdateChecker")){
+			UpdateChecker updater = new UpdateChecker(this, 59068, this.getFile(), UpdateType.NO_DOWNLOAD, true);
+			if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
+				this.getLogger().info("New version available! " + updater.getLatestName()+" at " + updater.getLatestFileLink());
+			}
+		}
 
 	}
 	@Override
 	public void onDisable() {
 		PluginDescriptionFile pdfFile = this.getDescription();
+		
 		log.info(pdfFile.getName() + " is now Disabled!");
-		if(all.isEmpty()){
+    	this.reloadConfig();
+    		this.getConfig().set("Worlds", worlds);
 			this.getConfig().set("Blacklist", all);
-		}
-		if(place.isEmpty()){ 
 			this.getConfig().set("Blacklist Placement", place);
-		}
-		if(pickup.isEmpty()){
 			this.getConfig().set("Blacklist Pickup", pickup);
-		}
-		if(interact.isEmpty()){
 			this.getConfig().set("Blacklist Interaction", interact);
-		}
-		if(click.isEmpty()){
 			this.getConfig().set("Blacklist Click", click);
-		}
-		if(br.isEmpty()){ 
 			this.getConfig().set("Blacklist Break", br);
-			
-		}
-		this.reloadConfig();
+			this.getConfig().set("Blacklist World", world);
 		this.saveConfig();
 	}
 	// THIS IS FOR /banitem ADD command!
@@ -140,7 +110,7 @@ public class main extends JavaPlugin{
 			String allArgs = sb.toString();
 			
 			if(commandLabel.equalsIgnoreCase("BanItem") && args.length==0){
-				player.sendMessage(banitem + " Version 2.0");
+				player.sendMessage(banitem + " Version 2.3");
 			}
 			else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("add") && args.length == 1){
 				if(player.hasPermission("banitem.add") || player.hasPermission("banitem.*") || player.isOp()){
@@ -150,10 +120,9 @@ public class main extends JavaPlugin{
 							+ ChatColor.DARK_RED
 							+ "You do not have permission to use this command");
 				}
-			}
-			else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("add") && args.length > 1){
+			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("add") && args.length > 1){
 				if(player.hasPermission("banitem.add") || player.hasPermission("banitem.*") || player.isOp()){
-					if(itemmethod.number == 0){
+					if(itemmethod.getnumber() == 0){
 						
 						all.add(id + ":" + data + ":" + allArgs);
 						
@@ -169,7 +138,7 @@ public class main extends JavaPlugin{
 							
 							player.sendMessage(banitem + " This item [" + id + ":" + data +"] is already banned because:");
 							
-							player.sendMessage(banitem + " "+ itemmethod.Reason );
+							player.sendMessage(banitem + " "+ itemmethod.getReason() );
 							
 						}
 				}else{
@@ -179,11 +148,11 @@ public class main extends JavaPlugin{
 				}
 			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("check") && args.length ==1){
 				if(player.hasPermission("banitem.*") || player.isOp() || player.hasPermission("banitem.check")){
-					if(itemmethod.number == 1) {
+					if(itemmethod.getnumber() == 1) {
 						
-						player.sendMessage(banitem + " [" +itemmethod.Id +":"+itemmethod.Data+ "] is banned because:");
+						player.sendMessage(banitem + " [" +itemmethod.getId() +":"+itemmethod.getData()+ "] is banned because:");
 						
-						player.sendMessage(banitem +" "+ itemmethod.Reason);
+						player.sendMessage(banitem +" "+ itemmethod.getReason());
 						
 					}else{
 						
@@ -197,9 +166,9 @@ public class main extends JavaPlugin{
 					&& args.length == 1){
 				if(player.hasPermission("banitem.remove") || player.hasPermission("banitem.del") || player.hasPermission("banitem.*") 
 						|| player.isOp()){
-					if(itemmethod.number==1){
+					if(itemmethod.getnumber()==1){
 						
-						all.remove(itemmethod.Id + ":" + itemmethod.Data + ":" + itemmethod.Reason);
+						all.remove(itemmethod.getId() + ":" + itemmethod.getData() + ":" + itemmethod.getReason());
 						
 						player.sendMessage(banitem + " Removed item from ban list");
 						this.reloadConfig();
@@ -219,7 +188,16 @@ public class main extends JavaPlugin{
 							+ "You do not have permission to use this command");
 				}
 				
-			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("toggle") && args[1].equalsIgnoreCase("conf") && args.length ==2){
+			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("toggle") && args.length == 1){
+				if(player.hasPermission("banitem.toggle") || player.hasPermission("banitem.*")){
+					player.sendMessage(banitem + ChatColor.DARK_RED + "Params needed. Param list: conf");
+				}else{
+					player.sendMessage(banitem
+							+ ChatColor.DARK_RED
+							+ "You do not have permission to use this command");
+				}
+				
+			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("toggle") && args[1].equalsIgnoreCase("conf")){
 				if(player.hasPermission("banitem.toggle.conf") || player.hasPermission("banitem.toggle") || player.hasPermission("banitem.*")
 						|| player.isOp()){
 					if(this.getConfig().getBoolean("Confiscate")== true) {
@@ -229,15 +207,6 @@ public class main extends JavaPlugin{
 						this.getConfig().set("Confiscate", true);
 						player.sendMessage(banitem + "Toggled True");
 					}
-				}else{
-					player.sendMessage(banitem
-							+ ChatColor.DARK_RED
-							+ "You do not have permission to use this command");
-				}
-				
-			}else if(commandLabel.equalsIgnoreCase("BanItem") && args[0].equalsIgnoreCase("toggle")&& args.length ==1){
-				if(player.hasPermission("banitem.toggle") || player.hasPermission("banitem.*")){
-					player.sendMessage(banitem + ChatColor.DARK_RED + "Params needed. Param list: conf");
 				}else{
 					player.sendMessage(banitem
 							+ ChatColor.DARK_RED
@@ -255,6 +224,7 @@ public class main extends JavaPlugin{
 					click = (ArrayList<String>) this.getConfig().getStringList("Blacklist Click");
 					br = (ArrayList<String>) this.getConfig().getStringList("Blacklist Break");
 					worlds = (ArrayList<String>) this.getConfig().getStringList("Worlds");
+					world = (ArrayList<String>) this.getConfig().getStringList("Blacklist World");
 					player.sendMessage(banitem + " Reload Complete.");
 				}else{
 					player.sendMessage(banitem
@@ -276,10 +246,10 @@ public class main extends JavaPlugin{
 				click = (ArrayList<String>) this.getConfig().getStringList("Blacklist Click");
 				br = (ArrayList<String>) this.getConfig().getStringList("Blacklist Break");
 				worlds = (ArrayList<String>) this.getConfig().getStringList("Worlds");
+				world = (ArrayList<String>) this.getConfig().getStringList("Blacklist World");
 				sender.sendMessage(banitem + " Reload Complete.");
 		}
 		}
 		return false;
 	}
-	
 }

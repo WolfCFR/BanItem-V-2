@@ -1,7 +1,15 @@
 ##-----------Plugin made by abcalvin--------------
+
 Confiscate: false
-UpdateChecker: true
+
+UpdateChecker: false
+
+WorldBlockRemove: false
+
 Worlds:
+- world
+- world_nether
+- world_the_end
 
 Blacklist:
 

@@ -8,11 +8,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class PlayerListener implements Listener {
+public class PlayerListener extends JavaPlugin implements Listener {
 	
 	public static main plugin;
 
@@ -36,23 +36,30 @@ public class PlayerListener implements Listener {
 			itemcheck itemmethod1 = new itemcheck(plugin.interact, id, data);
 			if(e instanceof Player){
 			}else{
-					if(itemmethod.number == 1 || itemmethod1.number == 1){
+					if(itemmethod.getnumber() == 1 || itemmethod1.getnumber() == 1){
 						if (plugin.getConfig().getBoolean("Confiscate")){
 							e.getPlayer().setItemInHand(new ItemStack(Material.AIR, 1));
 							e.setCancelled(true);
 							player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is confiscated because:");
-							if(itemmethod.Reason != null){
-							player.sendMessage(plugin.banitem + itemmethod.Reason );
+							if(itemmethod.getReason() != null){
+							player.sendMessage(plugin.banitem + itemmethod.getReason() );
 							}else{
-							player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+							player.sendMessage(plugin.banitem + itemmethod1.getReason() );	
 							}
 						}else{
-							e.setCancelled(true);
-							player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Interacted because:");
-							if(itemmethod.Reason != null){
-							player.sendMessage(plugin.banitem + itemmethod.Reason );
+							int itemslot = e.getPlayer().getInventory().getHeldItemSlot();
+							if(itemslot == 8){
+								e.getPlayer().getInventory().setHeldItemSlot(itemslot-1);
 							}else{
-							player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+								e.getPlayer().getInventory().setHeldItemSlot(itemslot+1);
+							}
+							e.setCancelled(true);
+
+							player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Interacted because:");
+							if(itemmethod.getReason() != null){
+							player.sendMessage(plugin.banitem + itemmethod.getReason() );
+							}else{
+							player.sendMessage(plugin.banitem + itemmethod1.getReason() );	
 							}
 						}	
 					}
@@ -76,23 +83,23 @@ public class PlayerListener implements Listener {
 		}else{
 		itemcheck itemmethod = new itemcheck(plugin.all, id, data);
 		itemcheck itemmethod1 = new itemcheck(plugin.click, id, data);
-		if(itemmethod.number == 1 || itemmethod1.number == 1){
+		if(itemmethod.getnumber() == 1 || itemmethod1.getnumber() == 1){
 			if (plugin.getConfig().getBoolean("Confiscate")){
 				e.setCurrentItem(new ItemStack(Material.AIR, 1));
 				e.setCancelled(true);
 				player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is confiscated because:");
-				if(itemmethod.Reason != null){
-				player.sendMessage(plugin.banitem + itemmethod.Reason );
+				if(itemmethod.getReason() != null){
+				player.sendMessage(plugin.banitem + itemmethod.getReason() );
 				}else{
-				player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+				player.sendMessage(plugin.banitem + itemmethod1.getReason() );	
 				}
 			}else{
 				e.setCancelled(true);
 				player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Clicked because:");
-				if(itemmethod.Reason != null){
-				player.sendMessage(plugin.banitem + itemmethod.Reason );
+				if(itemmethod.getReason() != null){
+				player.sendMessage(plugin.banitem + itemmethod.getReason() );
 				}else{
-				player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+				player.sendMessage(plugin.banitem + itemmethod1.getReason() );	
 				}
 			}
 				}
@@ -107,32 +114,22 @@ public class PlayerListener implements Listener {
 		int id = item.getType().getId();
 		byte data = item.getData().getData();
 		if(plugin.worlds.contains(player.getWorld().getName())){
-		if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.pickup." + id + ":*")
-				 || player.hasPermission("banitem.pickup." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*")
-				 || player.isOp() || player.hasPermission("banitem.*")) {
-		}else{
-		itemcheck itemmethod = new itemcheck(plugin.all, id, data);
-		itemcheck itemmethod1 = new itemcheck(plugin.pickup, id, data);
-		if(itemmethod.number == 1 || itemmethod1.number == 1){
-			e.setCancelled(true);
-			player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Picked up because:");
-			if(itemmethod.Reason != null){
-			player.sendMessage(plugin.banitem + itemmethod.Reason );
+			if(player.hasPermission("banitem.bypass." + id + ":" + data) || player.hasPermission("banitem.pickup." + id + ":*")
+					|| player.hasPermission("banitem.pickup." + id + ":" + data) || player.hasPermission("banitem.bypass." + id + ":*")
+					|| player.isOp() || player.hasPermission("banitem.*")) {
 			}else{
-			player.sendMessage(plugin.banitem + itemmethod1.Reason );	
+				itemcheck itemmethod = new itemcheck(plugin.all, id, data);
+				itemcheck itemmethod1 = new itemcheck(plugin.pickup, id, data);
+				if(itemmethod.getnumber() == 1 || itemmethod1.getnumber() == 1){
+					e.setCancelled(true);
+					player.sendMessage(plugin.banitem + ChatColor.RED + "This item [" +id + ":"+ data + "] is banned from being Picked up because:");
+					if(itemmethod.getReason() != null){
+				player.sendMessage(plugin.banitem + itemmethod.getReason() );
+					}else{
+						player.sendMessage(plugin.banitem + itemmethod1.getReason() );	
+					}
+				}
 			}
-			}
-		}
 		}
 	}
-	@EventHandler
-	private void onLogin(PlayerJoinEvent e) {
-		Player player = e.getPlayer();
-		if(player.isOp() && plugin.getConfig().getBoolean("UpdateChecker")){
-			if(plugin.UpdateChecker.updateNeeded()){
-				player.sendMessage(plugin.banitem + " Version: " +plugin.UpdateChecker.getVersion().toString()+ " is now available for update at " + plugin.UpdateChecker.getLink().toString());
-			}
-		}
-	}
-	
 }
